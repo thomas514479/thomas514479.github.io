@@ -1,1 +1,203 @@
-<h1>Bem-vindo ao diretório de sites hospedados!</h1>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Hospedagem - Sites</title>
+  <meta name="description" content="Plataforma robusta de hospedagem integrada com GitHub.">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      background: #111;
+      color: #f0f0f0;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: 18px;
+      color: #aaa;
+    }
+    #searchContainer {
+      text-align: center;
+      margin-bottom: 20px;
+      position: relative;
+      display: inline-block;
+    }
+    input[type="text"] {
+      width: 300px;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    #suggestionList {
+      position: absolute;
+      top: 45px;
+      width: 100%;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1;
+      display: none;
+    }
+    #suggestionList div {
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+    }
+    #suggestionList div:hover {
+      background: #444;
+    }
+    #siteList {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .siteItem {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid #333;
+      padding: 15px;
+      margin: 10px;
+      border-radius: 8px;
+      width: 200px;
+      text-align: center;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .siteItem:hover {
+      background: rgba(255, 204, 0, 0.2);
+      transform: translateY(-5px);
+    }
+    .siteItem a {
+      display: block;
+      color: #fff;
+      text-decoration: none;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .siteItem a:hover {
+      color: #ffcc00;
+    }
+    .featured {
+      border: 2px solid #ffcc00;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sistema de Hospedagem</h1>
+    <p>Hospedagem de sites integrada com GitHub</p>
+  </header>
+  <div id="searchContainer">
+    <input type="text" id="searchInput" placeholder="Pesquisar sites...">
+    <div id="suggestionList"></div>
+  </div>
+  <div id="siteList"></div>
+  <script>
+    (function() {
+      const siteListEl = document.getElementById("siteList");
+      const searchInputEl = document.getElementById("searchInput");
+      const suggestionListEl = document.getElementById("suggestionList");
+      let sites = [];
+
+      function displaySites(filteredSites) {
+        siteListEl.innerHTML = "";
+        filteredSites.forEach(function(site) {
+          const siteDiv = document.createElement("div");
+          siteDiv.className = "siteItem";
+          const siteLink = document.createElement("a");
+          siteLink.href = site.url;
+          siteLink.textContent = site.name;
+          siteLink.target = "_blank";
+          siteDiv.appendChild(siteLink);
+          siteListEl.appendChild(siteDiv);
+        });
+      }
+      
+      function displaySuggestions(filteredSites) {
+        suggestionListEl.innerHTML = "";
+        if (filteredSites.length === 0 || searchInputEl.value.trim() === "") {
+          suggestionListEl.style.display = "none";
+          return;
+        }
+        filteredSites.forEach(function(site) {
+          const suggestionItem = document.createElement("div");
+          suggestionItem.textContent = site.name;
+          suggestionItem.addEventListener("click", function() {
+            searchInputEl.value = site.name;
+            suggestionListEl.style.display = "none";
+            const selectedSites = sites.filter(function(s) {
+              return s.name.toLowerCase().includes(site.name.toLowerCase());
+            });
+            displaySites(selectedSites);
+          });
+          suggestionListEl.appendChild(suggestionItem);
+        });
+        suggestionListEl.style.display = "block";
+      }
+      
+      function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            func.apply(this, args);
+          }, delay);
+        };
+      }
+      
+      function fetchSites() {
+        fetch("https://api.github.com/repos/thomas514479/thomas514479.github.io/contents/sites")
+          .then(function(response) {
+            return response.json();
+          })
+          .then(function(data) {
+            sites = [];
+            data.forEach(function(item) {
+              if (item.type === "dir") {
+                sites.push({
+                  name: item.name,
+                  url: "https://thomas514479.github.io/sites/" + item.name + "/"
+                });
+              }
+            });
+            displaySites(sites);
+          })
+          .catch(function(error) {
+            console.error("Erro ao carregar sites:", error);
+          });
+      }
+      
+      fetchSites();
+      
+      searchInputEl.addEventListener("input", debounce(function() {
+        const query = searchInputEl.value.toLowerCase();
+        const filteredSites = sites.filter(function(site) {
+          return site.name.toLowerCase().includes(query);
+        });
+        displaySites(filteredSites);
+        displaySuggestions(filteredSites);
+      }, 300));
+      
+      document.addEventListener("click", function(e) {
+        if (!searchInputEl.contains(e.target) && !suggestionListEl.contains(e.target)) {
+          suggestionListEl.style.display = "none";
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
