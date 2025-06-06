@@ -10,9 +10,21 @@
                 background-color: black;
                 color: white;
                 font-family: Arial, sans-serif;
-                text-align: center;
                 margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                text-align: center;
+            }
+
+            .container {
+                max-width: 800px;
                 padding: 20px;
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.2);
             }
 
             h1 {
@@ -38,14 +50,6 @@
                 text-decoration: underline;
             }
 
-            .container {
-                max-width: 800px;
-                margin: auto;
-                padding: 20px;
-                background-color: rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-            }
-
             button {
                 background-color: #ffcc00;
                 color: black;
@@ -60,15 +64,19 @@
             button:hover {
                 background-color: #e6b800;
             }
+
+            #repos {
+                margin-top: 20px;
+            }
         </style>
     </head>
     <body>
         <div class="container">
             <h1>Thomas - O Site Dos TomGamers</h1>
-            <h1>Código, Segurança, Estratégia!</h1>
-            <h2>Sites</h2>
+            <h2>Código, Segurança, Estratégia!</h2>
             <button onclick="window.location.href='https://thomas514479.github.io'">Acessar Site Principal</button>
-            <div id="repos"></div>
+            <h2>Sites</h2>
+            <div id="repos">Carregando repositórios...</div>
         </div>
 
         <script>
@@ -77,6 +85,8 @@
                     .then(response => response.json())
                     .then(data => {
                         const reposContainer = document.getElementById("repos");
+                        reposContainer.innerHTML = ""; // Remove o texto inicial
+
                         data.forEach(repo => {
                             const link = document.createElement("a");
                             link.href = repo.html_url;
@@ -84,7 +94,10 @@
                             reposContainer.appendChild(link);
                         });
                     })
-                    .catch(error => console.error("Erro ao buscar dados:", error));
+                    .catch(error => {
+                        document.getElementById("repos").innerHTML = "Erro ao carregar repositórios.";
+                        console.error("Erro ao buscar dados:", error);
+                    });
             });
         </script>
     </body>
