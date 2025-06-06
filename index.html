@@ -2,10 +2,70 @@
 <html>
     <head>
         <title>Thomas - O Site Dos TomGamers | Código, Segurança, Estratégia!</title>
+        <style>
+            body {
+    background-color: black;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: white;
+    font-size: 30px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: white;
+    font-size: 25px;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+a {
+    color: white;
+    font-size: 20px;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #ffcc00;
+    text-decoration: underline;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+p {
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+        </style>
     </head>
     <body>
-        <h1>
-            Thomas - O Site Dos TomGamers 
-            Código, Segurança, Estratégia!</h1>
+        <button onclick
+        <h1>Thomas - O Site Dos TomGamers</h1>
+        <h1>Código, Segurança, Estratégia!</h1>
+        <h2>Sites</h2>
+            <script>
+              fetch('https://api.github.com/users/thomas514479/repos')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(repo => {
+                        const link = document.createElement("a");
+                        link.href = repo.html_url;
+                        link.textContent = repo.name;
+                        document.body.appendChild(link);
+                    });
+                })
+                .catch(error => console.error("Erro ao buscar dados:", error));
+            </script>
     </body>
 </html>
