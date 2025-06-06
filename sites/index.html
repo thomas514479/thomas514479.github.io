@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Hospedagem - Sites</title>
-  <meta name="description" content="Plataforma robusta de hospedagem integrada com GitHub.">
+  <meta name="description" content="Plataforma robusta de hospedagem de sites integrada com GitHub.">
   <style>
+    /* Reset e estilo padrão */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -29,6 +30,7 @@
       font-size: 18px;
       color: #aaa;
     }
+    /* Estilo do container de busca */
     #searchContainer {
       text-align: center;
       margin-bottom: 20px;
@@ -42,6 +44,7 @@
       border-radius: 5px;
       font-size: 16px;
     }
+    /* Sugestões do autocomplete */
     #suggestionList {
       position: absolute;
       top: 45px;
@@ -62,10 +65,12 @@
     #suggestionList div:hover {
       background: #444;
     }
+    /* Estilo da listagem de sites */
     #siteList {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
+      margin-bottom: 40px;
     }
     .siteItem {
       background: rgba(255, 255, 255, 0.1);
@@ -91,8 +96,40 @@
     .siteItem a:hover {
       color: #ffcc00;
     }
-    .featured {
-      border: 2px solid #ffcc00;
+    /* Estilo do formulário de hospedagem */
+    .form-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+    .form-container h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .form-container label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    .form-container input, .form-container textarea {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .form-container button {
+      display: inline-block;
+      background: #ffcc00;
+      color: #111;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .form-container button:hover {
+      background: #e6b800;
     }
   </style>
 </head>
@@ -101,11 +138,25 @@
     <h1>Sistema de Hospedagem</h1>
     <p>Hospedagem de sites integrada com GitHub</p>
   </header>
+
   <div id="searchContainer">
     <input type="text" id="searchInput" placeholder="Pesquisar sites...">
     <div id="suggestionList"></div>
   </div>
-  <div id="siteList"></div>
+
+  <div id="siteList">
+    <p>Carregando sites...</p>
+  </div>
+
+  <div class="form-container">
+    <h2>Hospedar Novo Site</h2>
+    <label for="siteName">Nome do site (sem espaços, ex: meusite):</label>
+    <input type="text" id="siteName" placeholder="Nome do site">
+    <label for="siteContent">Conteúdo HTML (código do site):</label>
+    <textarea id="siteContent" rows="8" placeholder="<html>Seu código aqui</html>"></textarea>
+    <button id="uploadSite">Hospedar Site</button>
+  </div>
+
   <script>
     (function() {
       const siteListEl = document.getElementById("siteList");
@@ -113,20 +164,26 @@
       const suggestionListEl = document.getElementById("suggestionList");
       let sites = [];
 
+      // Função para exibir os sites na listagem
       function displaySites(filteredSites) {
         siteListEl.innerHTML = "";
+        if (filteredSites.length === 0) {
+          siteListEl.innerHTML = "<p>Nenhum site encontrado.</p>";
+          return;
+        }
         filteredSites.forEach(function(site) {
-          const siteDiv = document.createElement("div");
-          siteDiv.className = "siteItem";
-          const siteLink = document.createElement("a");
-          siteLink.href = site.url;
-          siteLink.textContent = site.name;
-          siteLink.target = "_blank";
-          siteDiv.appendChild(siteLink);
-          siteListEl.appendChild(siteDiv);
+          const siteItem = document.createElement("div");
+          siteItem.className = "siteItem";
+          const link = document.createElement("a");
+          link.href = site.url;
+          link.textContent = site.name;
+          link.target = "_blank";
+          siteItem.appendChild(link);
+          siteListEl.appendChild(siteItem);
         });
       }
-      
+
+      // Função para exibir as sugestões de autocomplete
       function displaySuggestions(filteredSites) {
         suggestionListEl.innerHTML = "";
         if (filteredSites.length === 0 || searchInputEl.value.trim() === "") {
@@ -134,21 +191,22 @@
           return;
         }
         filteredSites.forEach(function(site) {
-          const suggestionItem = document.createElement("div");
-          suggestionItem.textContent = site.name;
-          suggestionItem.addEventListener("click", function() {
+          const item = document.createElement("div");
+          item.textContent = site.name;
+          item.addEventListener("click", function() {
             searchInputEl.value = site.name;
             suggestionListEl.style.display = "none";
-            const selectedSites = sites.filter(function(s) {
+            const selected = sites.filter(function(s) {
               return s.name.toLowerCase().includes(site.name.toLowerCase());
             });
-            displaySites(selectedSites);
+            displaySites(selected);
           });
-          suggestionListEl.appendChild(suggestionItem);
+          suggestionListEl.appendChild(item);
         });
         suggestionListEl.style.display = "block";
       }
-      
+
+      // Função de debounce para otimizar o processamento durante a digitação
       function debounce(func, delay) {
         let timeout;
         return function(...args) {
@@ -158,7 +216,8 @@
           }, delay);
         };
       }
-      
+
+      // Função para buscar os sites hospedados no diretório `/sites`
       function fetchSites() {
         fetch("https://api.github.com/repos/thomas514479/thomas514479.github.io/contents/sites")
           .then(function(response) {
@@ -178,24 +237,66 @@
           })
           .catch(function(error) {
             console.error("Erro ao carregar sites:", error);
+            siteListEl.innerHTML = "<p>Erro ao carregar sites.</p>";
           });
       }
-      
+
       fetchSites();
-      
+
+      // Evento para input com debounce
       searchInputEl.addEventListener("input", debounce(function() {
         const query = searchInputEl.value.toLowerCase();
-        const filteredSites = sites.filter(function(site) {
+        const filtered = sites.filter(function(site) {
           return site.name.toLowerCase().includes(query);
         });
-        displaySites(filteredSites);
-        displaySuggestions(filteredSites);
+        displaySites(filtered);
+        displaySuggestions(filtered);
       }, 300));
-      
+
+      // Esconde as sugestões se o clique não ocorrer no campo de busca ou na lista
       document.addEventListener("click", function(e) {
         if (!searchInputEl.contains(e.target) && !suggestionListEl.contains(e.target)) {
           suggestionListEl.style.display = "none";
         }
+      });
+
+      // Função para hospedar novo site via GitHub API
+      document.getElementById("uploadSite").addEventListener("click", function() {
+        const siteName = document.getElementById("siteName").value.trim();
+        const siteContent = document.getElementById("siteContent").value.trim();
+
+        if (!siteName || !siteContent) {
+          alert("Por favor, preencha todos os campos!");
+          return;
+        }
+
+        // A URL abaixo tenta criar (ou atualizar) o arquivo index.html no diretório do novo site.
+        fetch(`https://api.github.com/repos/thomas514479/thomas514479.github.io/contents/sites/${siteName}/index.html`, {
+          method: "PUT",
+          headers: {
+            "Authorization": "token SEU_TOKEN_GITHUB",  // <== Substitua "SEU_TOKEN_GITHUB" pelo seu token real
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: "Hospedando novo site: " + siteName,
+            content: btoa(siteContent)
+          })
+        })
+          .then(function(response) {
+            return response.json();
+          })
+          .then(function(data) {
+            if (data.content && data.content.path) {
+              alert("Site hospedado com sucesso! URL: https://thomas514479.github.io/sites/" + siteName + "/");
+              fetchSites(); // Atualiza a listagem de sites
+            } else {
+              alert("Erro ao hospedar site. Verifique os dados e seu token GitHub.");
+            }
+          })
+          .catch(function(error) {
+            console.error("Erro ao hospedar site:", error);
+            alert("Erro ao hospedar site. Veja o console para detalhes.");
+          });
       });
     })();
   </script>
