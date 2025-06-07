@@ -1,126 +1,118 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hospedagem Automática de Sites</title>
-    <meta name="description" content="Hospede sites automaticamente no GitHub Pages." />
+    <meta name="description" content="Hospede sites automaticamente no GitHub Pages.">
     <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-      }
-      body {
-        background-color: #111;
-        color: #fff;
-        text-align: center;
-        padding: 30px;
-      }
-      h1 {
-        font-size: 28px;
-        margin-bottom: 20px;
-      }
-      .form-container {
-        max-width: 600px;
-        margin: auto;
-        padding: 20px;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-      }
-      .form-container input,
-      .form-container textarea {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: none;
-        border-radius: 5px;
-      }
-      .form-container button {
-        background: #ffcc00;
-        color: #111;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 10px;
-      }
-      .form-container button:hover {
-        background: #e6b800;
-      }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: #111;
+            color: #fff;
+            text-align: center;
+            padding: 30px;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .form-container input,
+        .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        .form-container button {
+            background: #ffcc00;
+            color: #111;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .form-container button:hover {
+            background: #e6b800;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <h1>Hospedagem Automática de Sites</h1>
     <p>Crie e publique seu site no GitHub Pages.</p>
     <div class="form-container">
-      <label>Nome do site:</label>
-      <input type="text" id="siteName" placeholder="meusite" />
-      <label>Conteúdo HTML do site:</label>
-      <textarea id="siteContent" rows="8" placeholder="<html>Seu código aqui</html>"></textarea>
-      <button id="uploadSite">Hospedar Site</button>
+        <label>Nome do site:</label>
+        <input type="text" id="siteName" placeholder="meusite">
+        <label>Conteúdo HTML do site:</label>
+        <textarea id="siteContent" rows="8" placeholder="<html>Seu código aqui</html>"></textarea>
+        <button id="uploadSite">Hospedar Site</button>
     </div>
+
     <script>
-      // Ao enviar o formulário, o código verifica se o arquivo (e o diretório) já existe.
-      // Se o diretório "sites/nomedosite" não existir, ele será criado automaticamente
-      // quando o arquivo for enviado.
-      document.getElementById("uploadSite").addEventListener("click", function () {
-        const siteName = document.getElementById("siteName").value.trim();
-        const siteContent = document.getElementById("siteContent").value.trim();
-        if (!siteName || !siteContent) {
-          alert("Preencha todos os campos.");
-          return;
-        }
-        const baseUrl = "https://api.github.com/repos/thomas514479/thomas514479.github.io/contents/";
-        // O caminho inclui o diretório "sites/<siteName>/index.html".
-        // Esse diretório é criado automaticamente quando o arquivo é enviado.
-        const filePath = `sites/${siteName}/index.html`;
-        const url = baseUrl + filePath;
-        
-        // Primeiro, tenta obter informações do arquivo para saber se ele já existe.
-        fetch(url, {
-          headers: { "Authorization": "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 }
-        })
-        .then(resp => {
-          if (resp.status === 200) {
-            return resp.json();
-          } else {
-            return null;
-          }
-        })
-        .then(fileInfo => {
-          const payload = {
-            message: `Hospedando novo site: ${siteName}`,
-            content: btoa(siteContent)
-          };
-          // Se o arquivo existir, inclua o sha para atualizá-lo.
-          if (fileInfo && fileInfo.sha) {
-            payload.sha = fileInfo.sha;
-          }
-          return fetch(url, {
-            method: "PUT",
-            headers: {
-              "Authorization": "token SEU_TOKEN_GITHUB",
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-          });
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.content && data.content.path) {
-            alert(`Site hospedado com sucesso!\nURL: https://thomas514479.github.io/sites/${siteName}/`);
-          } else {
-            console.error("Resposta da API:", data);
-            alert("Erro ao hospedar site. Verifique seu token do GitHub e as permissões.");
-          }
-        })
-        .catch(error => {
-          console.error("Erro:", error);
-          alert("Erro ao hospedar site.");
+        document.getElementById("uploadSite").addEventListener("click", async function () {
+            const siteName = document.getElementById("siteName").value.trim();
+            const siteContent = document.getElementById("siteContent").value.trim();
+
+            if (!siteName || !siteContent) {
+                alert("Preencha todos os campos.");
+                return;
+            }
+
+            const repoOwner = "thomas514479";
+            const repoName = "thomas514479.github.io";
+            const baseUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/sites/${siteName}`;
+            const authHeader = {
+                "Authorization": "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",
+                "Content-Type": "application/json"
+            };
+
+            try {
+                // Passo 1: Criar o diretório com um arquivo `.gitkeep`
+                const gitkeepPayload = {
+                    message: `Criando diretório para site: ${siteName}`,
+                    content: btoa(""),
+                };
+
+                await fetch(`${baseUrl}/.gitkeep`, {
+                    method: "PUT",
+                    headers: authHeader,
+                    body: JSON.stringify(gitkeepPayload)
+                });
+
+                // Passo 2: Criar o index.html dentro do diretório recém-criado
+                const indexPayload = {
+                    message: `Hospedando novo site: ${siteName}`,
+                    content: btoa(siteContent),
+                };
+
+                const response = await fetch(`${baseUrl}/index.html`, {
+                    method: "PUT",
+                    headers: authHeader,
+                    body: JSON.stringify(indexPayload)
+                });
+
+                const data = await response.json();
+
+                if (data.content && data.content.path) {
+                    alert(`Site hospedado com sucesso!\nURL: https://thomas514479.github.io/sites/${siteName}/`);
+                } else {
+                    alert("Erro ao hospedar site. Verifique seu token do GitHub.");
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+                alert("Erro ao hospedar site.");
+            }
         });
-      });
     </script>
-  </body>
+</body>
 </html>
