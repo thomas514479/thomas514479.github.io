@@ -58,14 +58,13 @@
       <label>Nome do site:</label>
       <input type="text" id="siteName" placeholder="meusite" />
       <label>Conteúdo HTML do site:</label>
-      <textarea
-        id="siteContent"
-        rows="8"
-        placeholder="<html>Seu código aqui</html>"
-      ></textarea>
+      <textarea id="siteContent" rows="8" placeholder="<html>Seu código aqui</html>"></textarea>
       <button id="uploadSite">Hospedar Site</button>
     </div>
     <script>
+      // Ao enviar o formulário, o código verifica se o arquivo (e o diretório) já existe.
+      // Se o diretório "sites/nomedosite" não existir, ele será criado automaticamente
+      // quando o arquivo for enviado.
       document.getElementById("uploadSite").addEventListener("click", function () {
         const siteName = document.getElementById("siteName").value.trim();
         const siteContent = document.getElementById("siteContent").value.trim();
@@ -73,34 +72,56 @@
           alert("Preencha todos os campos.");
           return;
         }
-        const url = `https://api.github.com/repos/thomas514479/thomas514479.github.io/contents/sites/${siteName}/index.html`;
-        const payload = {
-          message: `Hospedando novo site: ${siteName}`,
-          content: btoa(siteContent)
-        };
+        const baseUrl = "https://api.github.com/repos/thomas514479/thomas514479.github.io/contents/";
+        // O caminho inclui o diretório "sites/<siteName>/index.html".
+        // Esse diretório é criado automaticamente quando o arquivo é enviado.
+        const filePath = `sites/${siteName}/index.html`;
+        const url = baseUrl + filePath;
+        
+        // Primeiro, tenta obter informações do arquivo para saber se ele já existe.
         fetch(url, {
-          method: "PUT",
-          headers: {
-            "Authorization": "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",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
+          headers: { "Authorization": "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 }
         })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.content && data.content.path) {
-              alert(
-                `Site hospedado com sucesso!\nURL: https://thomas514479.github.io/sites/${siteName}/`
-              );
-            } else {
-              alert("Erro ao hospedar site. Verifique seu token do GitHub.");
-            }
-          })
-          .catch((error) => {
-            console.error("Erro:", error);
-            alert("Erro ao hospedar site.");
+        .then(resp => {
+          if (resp.status === 200) {
+            return resp.json();
+          } else {
+            return null;
+          }
+        })
+        .then(fileInfo => {
+          const payload = {
+            message: `Hospedando novo site: ${siteName}`,
+            content: btoa(siteContent)
+          };
+          // Se o arquivo existir, inclua o sha para atualizá-lo.
+          if (fileInfo && fileInfo.sha) {
+            payload.sha = fileInfo.sha;
+          }
+          return fetch(url, {
+            method: "PUT",
+            headers: {
+              "Authorization": "token SEU_TOKEN_GITHUB",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
           });
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.content && data.content.path) {
+            alert(`Site hospedado com sucesso!\nURL: https://thomas514479.github.io/sites/${siteName}/`);
+          } else {
+            console.error("Resposta da API:", data);
+            alert("Erro ao hospedar site. Verifique seu token do GitHub e as permissões.");
+          }
+        })
+        .catch(error => {
+          console.error("Erro:", error);
+          alert("Erro ao hospedar site.");
+        });
       });
     </script>
   </body>
 </html>
+```
