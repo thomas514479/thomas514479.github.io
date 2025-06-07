@@ -4,60 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hospedagem Automática de Sites</title>
-    <meta name="description" content="Hospede sites automaticamente no GitHub Pages." />
+    <meta name="description" content="Hospedagem", "Hospedar", "Hosting", "Host" />
     <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-      }
-      body {
-        background-color: #111;
-        color: #fff;
-        text-align: center;
-        padding: 30px;
-      }
-      h1 {
-        font-size: 28px;
-        margin-bottom: 20px;
-      }
-      .form-container {
-        max-width: 600px;
-        margin: auto;
-        padding: 20px;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-      }
-      .form-container input,
-      .form-container textarea {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        border: none;
-        border-radius: 5px;
-      }
-      .form-container button {
-        background: #ffcc00;
-        color: #111;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 10px;
-      }
-      .form-container button:hover {
-        background: #e6b800;
-      }
+      * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+      body { background-color: #111; color: #fff; text-align: center; padding: 30px; }
+      .form-container { max-width: 600px; margin: auto; padding: 20px; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+      .form-container input, .form-container textarea { width: 100%; padding: 10px; margin-top: 10px; border: none; border-radius: 5px; }
+      .form-container button { background: #ffcc00; color: #111; padding: 10px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+      .form-container button:hover { background: #e6b800; }
     </style>
   </head>
   <body>
     <h1>Hospedagem Automática de Sites</h1>
-    <p>Crie e publique seu site no GitHub Pages.</p>
     <div class="form-container">
-      <label>Nome do site:</label>
-      <input type="text" id="siteName" placeholder="meusite" />
-      <label>Conteúdo HTML do site:</label>
+      <input type="text" id="siteName" placeholder="Nome do site" />
       <textarea id="siteContent" rows="8" placeholder="<html>Seu código aqui</html>"></textarea>
       <button id="uploadSite">Hospedar Site</button>
     </div>
@@ -66,59 +26,48 @@
       document.getElementById("uploadSite").addEventListener("click", async function () {
         const siteName = document.getElementById("siteName").value.trim();
         const siteContent = document.getElementById("siteContent").value.trim();
-
         if (!siteName || !siteContent) {
           alert("Preencha todos os campos.");
           return;
         }
-
         const repoOwner = "thomas514479";
         const repoName = "thomas514479.github.io";
         const baseUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/sites/${siteName}`;
         const authHeader = {
-          "Authorization": "token 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",  // Mantenha a palavra "token" e substitua SEU_TOKEN_GITHUB pelo seu token real.
+          "Authorization": "token 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", // Mantenha a palavra "token" + seu token real
           "Content-Type": "application/json"
         };
 
         try {
-          // Verifica se o .gitkeep já existe para indicar que o diretório foi criado.
           const gitkeepUrl = `${baseUrl}/.gitkeep`;
           let response = await fetch(gitkeepUrl, { headers: authHeader });
-          
           if (response.status !== 200) {
-            // Se não existir, cria o arquivo .gitkeep para que o diretório seja criado.
             const gitkeepPayload = {
-              message: `Criando diretório para site: ${siteName}`,
-              content: btoa("Conteúdo para manter o diretório")
+              message: `Criando diretório para ${siteName}`,
+              content: btoa("")
             };
-
             response = await fetch(gitkeepUrl, {
               method: "PUT",
               headers: authHeader,
               body: JSON.stringify(gitkeepPayload)
             });
-
-            const gitkeepData = await response.json();
-            if (!(gitkeepData.content && gitkeepData.content.path)) {
+            const dataGitkeep = await response.json();
+            if (!(dataGitkeep.content && dataGitkeep.content.path)) {
               alert("Erro ao criar o diretório.");
               return;
             }
           }
 
-          // Cria ou atualiza o arquivo index.html com o conteúdo do site.
           const indexUrl = `${baseUrl}/index.html`;
           let payload = {
-            message: `Hospedando novo site: ${siteName}`,
-            content: btoa(siteContent)
+            message: `Hospedando site ${siteName}`,
+            content: btoa(unescape(encodeURIComponent(siteContent)))
           };
 
-          // Verifica se já existe um index.html; se existir, adiciona o sha para atualizar.
           response = await fetch(indexUrl, { headers: authHeader });
           if (response.status === 200) {
-            const indexData = await response.json();
-            if (indexData.sha) {
-              payload.sha = indexData.sha;
-            }
+            const dataIndex = await response.json();
+            if (dataIndex.sha) payload.sha = dataIndex.sha;
           }
 
           response = await fetch(indexUrl, {
@@ -126,16 +75,15 @@
             headers: authHeader,
             body: JSON.stringify(payload)
           });
-
           const result = await response.json();
           if (result.content && result.content.path) {
-            alert(`Site hospedado com sucesso!\nURL: https://${repoOwner}.github.io/sites/${siteName}/`);
+            alert(`Site hospedado! URL: https://${repoOwner}.github.io/sites/${siteName}/`);
           } else {
             console.error(result);
-            alert("Erro ao hospedar site. Verifique seu token e as permissões.");
+            alert("Erro ao hospedar site.");
           }
         } catch (error) {
-          console.error("Erro:", error);
+          console.error(error);
           alert("Erro ao hospedar site.");
         }
       });
